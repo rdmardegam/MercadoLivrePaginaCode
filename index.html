@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>ML Token Helper</title>
+  <style>
+    body { font-family: monospace; padding: 40px; background: #f5f5f5; }
+    pre { background: #222; color: #0f0; padding: 20px; border-radius: 8px; overflow-x: auto; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    input { width: 100%; padding: 8px; margin: 4px 0 12px; font-size: 14px; }
+    label { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>ML Token Helper</h2>
+
+  <label>Client ID</label>
+  <input id="client_id" placeholder="seu client_id" />
+
+  <label>Client Secret</label>
+  <input id="client_secret" placeholder="seu client_secret" />
+
+  <button onclick="getToken()">Trocar code por token</button>
+
+  <pre id="result">Aguardando...</pre>
+
+  <script>
+    // Pega o ?code= da URL automaticamente
+    const code = new URLSearchParams(window.location.search).get('code');
+    
+    if (code) {
+      document.getElementById('result').textContent = `Code detectado: ${code}\n\nPreencha Client ID e Secret e clique no botão.`;
+    } else {
+      document.getElementById('result').textContent = 'Nenhum code na URL.\nVocê precisa vir aqui via redirect do Mercado Livre.';
+    }
+
+    async function getToken() {
+      const client_id = document.getElementById('client_id').value;
+      const client_secret = document.getElementById('client_secret').value;
+
+      document.getElementById('result').textContent = 'Buscando token...';
+
+      try {
+        const res = await fetch('https://api.mercadolibre.com/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id,
+            client_secret,
+            code,
+            redirect_uri: window.location.origin + window.location.pathname
+          })
+        });
+
+        const data = await res.json();
+        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('result').textContent = 'Erro: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
